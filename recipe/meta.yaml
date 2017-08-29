@@ -1,44 +1,47 @@
 {% set version = "1.9.3" %}
-{% set variant = "openblas" %}
 
 package:
   name: numpy
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/n/numpy/numpy-{{ version }}.tar.gz
+  url: https://github.com/numpy/numpy/archive/v{{ version }}.tar.gz
   sha256: c3b74d3b9da4ceb11f66abd21e117da8cf584b63a0efbd01a9b7e91b693fbbd6
+  patches:
+    - mklfft.patch
 
 build:
-  number: 202
-  # We lack openblas on Windows, and therefore can't build numpy there either currently.
-  skip: True  # [win]
+  number: 1
+  # conda 4.4+ can use this
+  requires_features:
+    blas: {{ blas_impl }}
+  # this is for conda 4.3 and below
   features:
-    - blas_{{ variant }}
+    - nomkl    # [x86 and blas_impl != 'mkl']
 
 requirements:
   build:
-    - toolchain
+    - {{ compiler('c') }}
+    - {{ compiler('fortran') }}
+  host:
     - cython
     - python
-    - setuptools
-    - blas 1.1 {{ variant }}
-    - openblas 0.2.19|0.2.19.*
+    - mkl-devel  {{ mkl }}  # [blas_impl == 'mkl']
+    - openblas    # [blas_impl == 'openblas']
   run:
     - python
-    - blas 1.1 {{ variant }}
-    - openblas 0.2.19|0.2.19.*
+    # openblas or mkl runtime included with run_exports
 
 test:
   requires:
     - nose
-  imports:
-    - numpy
-    - numpy.linalg.lapack_lite
   commands:
     - f2py -h
     - conda inspect linkages -p $PREFIX numpy  # [not win]
     - conda inspect objects -p $PREFIX numpy  # [osx]
+  imports:
+    - numpy
+    - numpy.linalg.lapack_lite
 
 about:
   home: http://numpy.scipy.org/
