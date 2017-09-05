@@ -11,6 +11,8 @@ source:
     - mklfft.patch
     # customize gfortran executable that gets looked for to use our GFORTRAN env var
     - gfortran_alias.patch
+    # fix fortran regex for ctng compilers
+    - fortran_regex.patch
 
 build:
   number: 2
