@@ -10,11 +10,9 @@ source:
   patches:
     - mklfft.patch
     # customize gfortran executable that gets looked for to use our GFORTRAN env var
-    - gfortran_alias.patch
+    - gfortran_alias.patch    # [linux]
     # fix fortran regex for ctng compilers
-    - fortran_regex.patch
-    # make intel fortran version detection a little easier
-    - force_intel_compiler_version.patch
+    - fortran_regex.patch     # [linux]
 
 build:
   number: 2
