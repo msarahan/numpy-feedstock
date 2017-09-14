@@ -1,5 +1,4 @@
 {% set version = "1.11.3" %}
-{% set variant = "openblas" %}
 
 package:
   name: numpy
@@ -8,25 +7,34 @@ package:
 source:
   url: https://github.com/numpy/numpy/archive/v{{ version }}.tar.gz
   sha256: 956afdeb9b5600e873326e410e9379684dac8f8f47ea569151a417984e7799cf
+  patches:
+    - mklfft.patch
+    # customize gfortran executable that gets looked for to use our GFORTRAN env var
+    - gfortran_alias.patch    # [linux]
+    # fix fortran regex for ctng compilers
+    - fortran_regex.patch     # [linux]
 
 build:
-  number: 202
-  skip: True  # [win]
+  number: 2
+  # conda 4.4+ can use this
+  requires_features:
+    blas: {{ blas_impl }}
+  # this is for conda 4.3 and below
   features:
-    - blas_{{ variant }}
+    - nomkl    # [x86 and blas_impl != 'mkl']
 
 requirements:
   build:
-    - python
+    - {{ compiler('c') }}
+    - {{ compiler('fortran') }}
+  host:
     - cython
-    - toolchain
+    - python
+    - mkl-devel  {{ mkl }}  # [blas_impl == 'mkl']
     - setuptools
-    - blas 1.1 {{ variant }}
-    - openblas 0.2.19|0.2.19.*
   run:
     - python
-    - blas 1.1 {{ variant }}
-    - openblas 0.2.19|0.2.19.*
+    # openblas or mkl runtime included with run_exports
 
 test:
   requires:

@@ -1,21 +1,13 @@
 #!/bin/bash
 
-cat > site.cfg <<EOF
-[DEFAULT]
-library_dirs = $PREFIX/lib
-include_dirs = $PREFIX/include
+cp $RECIPE_DIR/test_fft.py numpy/fft/tests
 
-[atlas]
-atlas_libs = openblas
-libraries = openblas
+if [ "$blas_impl" = "mkl" ]; then
+    printf "\n\n__mkl_version__ = \"$mkl\"\n" >> numpy/__init__.py
+fi
 
-[openblas]
-libraries = openblas
-library_dirs = $PREFIX/lib
-include_dirs = $PREFIX/include
-
-EOF
-
+# site.cfg comes from blas devel package (e.g. mkl-devel)
+cp $PREFIX/site.cfg site.cfg
 
 $PYTHON setup.py config
 $PYTHON setup.py build
