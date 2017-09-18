@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://github.com/numpy/numpy/archive/v{{ version }}.tar.gz
-  sha256: c3b74d3b9da4ceb11f66abd21e117da8cf584b63a0efbd01a9b7e91b693fbbd6
+  sha256: c678dc4f7f4801a25c139c1131a97d9187cf645de276e1b3c74e2eadb5b5c961
   patches:
     - mklfft.patch
     # customize gfortran executable that gets looked for to use our GFORTRAN env var
