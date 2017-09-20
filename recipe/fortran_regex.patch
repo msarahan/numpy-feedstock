@@ -1,35 +1,28 @@
-From 9724c114c30b3e2a59b409d50710ee9dac5849c1 Mon Sep 17 00:00:00 2001
+From 3de4f3689c93ede47b49f7f95009c690321079c7 Mon Sep 17 00:00:00 2001
 From: Jonathan Helmus <jjhelmus@gmail.com>
 Date: Wed, 20 Sep 2017 13:06:25 -0500
 Subject: [PATCH] adjust gfortran version search regex
 
-Use negative lookahead to avoid matching text inside parenthesis that looks
-like a version.
-
-This is needed because the gfortran crosstool-NG version string is:
+Adjust the gfortran regex to require a '.' to be present in the version number.
+This avoids matching text from the crosstool version string:
 GNU Fortran (crosstool-NG 8a21ab48) 7.2.0
 
-The old regex was matching the '-' in crosstool-NG.  The new regex matches the
-trailing 7.2.0.  Another helpful version to use is that from Ubuntu 16.04:
-GNU Fortran (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
+The old regex was matching the '-' in crosstool-NG. The new regex matches the
+trailing 7.2.0.
 ---
- numpy/distutils/fcompiler/gnu.py | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ numpy/distutils/fcompiler/gnu.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/numpy/distutils/fcompiler/gnu.py b/numpy/distutils/fcompiler/gnu.py
-index 2260fd5..044f207 100644
+index 2260fd5..6e1d949 100644
 --- a/numpy/distutils/fcompiler/gnu.py
 +++ b/numpy/distutils/fcompiler/gnu.py
-@@ -63,10 +63,10 @@ class GnuFCompiler(FCompiler):
-                     return ('gfortran', m.group(1))
-         else:
-             # Output probably from --version, try harder:
--            m = re.search(r'GNU Fortran\s+95.*?([0-9-.]+)', version_string)
-+            m = re.search(r'GNU Fortran\s+95.*?([0-9-.]+(?!.*\)))', version_string)
+@@ -66,7 +66,7 @@ class GnuFCompiler(FCompiler):
+             m = re.search(r'GNU Fortran\s+95.*?([0-9-.]+)', version_string)
              if m:
                  return ('gfortran', m.group(1))
 -            m = re.search(r'GNU Fortran.*?\-?([0-9-.]+)', version_string)
-+            m = re.search(r'GNU Fortran.*?\-?([0-9-.]+(?!.*\)))', version_string)
++            m = re.search(r'GNU Fortran.*?\-?([0-9-.]+\.[0-9-.]+)', version_string)
              if m:
                  v = m.group(1)
                  if v.startswith('0') or v.startswith('2') or v.startswith('3'):
