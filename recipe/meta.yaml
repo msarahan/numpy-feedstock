@@ -13,6 +13,8 @@ source:
     - gfortran_alias.patch    # [linux]
     # fix fortran regex for ctng compilers
     - fortran_regex.patch     # [linux]
+    # backport https://github.com/numpy/numpy/pull/7634 to support $CC
+    - correct-c-compiler-customization-in-system_info.py.patch
 
 build:
   number: 3
