@@ -33,7 +33,7 @@ requirements:
     - cython
     - python
     - mkl-devel  {{ mkl }}  # [blas_impl == 'mkl']
-    - openblas    # [blas_impl == 'openblas']
+    - openblas-devel {{ openblas }}  # [blas_impl == 'openblas']
   run:
     - python
     # openblas or mkl runtime included with run_exports
