@@ -18,6 +18,7 @@ source:
 
 build:
   number: 3
+  skip: True  # [blas_impl == 'openblas' and win]
   # conda 4.4+ can use this
   requires_features:
     blas: {{ blas_impl }}
