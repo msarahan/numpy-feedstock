@@ -30,5 +30,5 @@ print('USING MKLFFT: %s' % using_mklfft)
 # -fsanitize=signed-integer-overflow gave nothing,
 # -fno-strict-aliasing didn't help either.
 # TODO :: Investigate this properly.
-if not sys.maxsize > 2**32:
+if sys.maxsize > 2**32:
     sys.exit(not numpy.test().wasSuccessful())
