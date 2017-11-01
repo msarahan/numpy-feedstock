@@ -25,10 +25,10 @@ except AttributeError:
 
 print('USING MKLFFT: %s' % using_mklfft)
 
-# We have a test-case failure on 32-bit with MKL:
+# We have a test-case failure on 32-bit platforms:
 # https://github.com/numpy/numpy/issues/9665
 # -fsanitize=signed-integer-overflow gave nothing,
 # -fno-strict-aliasing didn't help either.
 # TODO :: Investigate this properly.
-if not have_mkl or sys.maxsize > 2**32:
+if not sys.maxsize > 2**32:
     sys.exit(not numpy.test().wasSuccessful())
