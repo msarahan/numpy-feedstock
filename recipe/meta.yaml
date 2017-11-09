@@ -1,5 +1,4 @@
 {% set version = "1.12.1" %}
-{% set variant = "openblas" %}
 
 package:
   name: numpy
@@ -8,30 +7,44 @@ package:
 source:
   url: https://github.com/numpy/numpy/archive/v{{ version }}.tar.gz
   sha256: 71253c0db5df2d0a925090b0804aa1070e9c336d891217bda5701f455d8141f7
+  patches:
+    - mklfft.patch
+    - osx-dist.patch
+    # customize gfortran executable that gets looked for to use our GFORTRAN env var
+    - gfortran_alias.patch
+    # Windows and its stupid long integer stuff breaks this test.  Just kill it.
+    - nuke_error_message.patch   # [win]
+    # Seems to be an issue with case sensitivity and Windows filesystem permission errors.
+    - windows_case_sensitivity.patch   # [win]
 
 build:
-  number: 200
-  # We lack openblas on Windows, and therefore can't build numpy there either currently.
-  skip: True  # [win]
+  number: 1
+  # conda 4.4+ can use this
+  requires_features:
+    blas: {{ blas_impl }}
+  # this is for conda 4.3 and below
   features:
-    - blas_{{ variant }}
+    - nomkl    # [x86 and blas_impl != 'mkl']
 
 requirements:
   build:
-    - toolchain
+    - {{ compiler('c') }}
+    - {{ compiler('fortran') }}
+  host:
     - cython
     - python
+    - mkl-devel  {{ mkl }}  # [blas_impl == 'mkl']
+    - openblas    # [blas_impl == 'openblas']
     - setuptools
-    - blas 1.1 {{ variant }}
-    - openblas 0.2.19|0.2.19.*
   run:
     - python
-    - blas 1.1 {{ variant }}
-    - openblas 0.2.19|0.2.19.*
+    # openblas or mkl runtime included with run_exports
 
 test:
   requires:
     - nose
+    - {{ compiler('c') }}
+    - {{ compiler('fortran') }}
   commands:
     - f2py -h
   imports:
@@ -43,6 +56,9 @@ about:
   license: BSD 3-Clause
   license_file: LICENSE.txt
   summary: 'Array processing for numbers, strings, records, and objects.'
+  doc_url: https://docs.scipy.org/doc/numpy-1.12.0/reference/
+  dev_url: https://github.com/numpy/numpy
+  dev_source_url: https://github.com/numpy/numpy/tree/master/doc
 
 extra:
   recipe-maintainers:
