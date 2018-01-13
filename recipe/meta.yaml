@@ -42,7 +42,7 @@ requirements:
 test:
   requires:
     - nose
-    - nomkl  # [blas_impl == 'openblas']
+    - nomkl  # [x86 and blas_impl != 'mkl']
   commands:
     - f2py -h
     - conda inspect linkages -p $PREFIX numpy  # [not win]
