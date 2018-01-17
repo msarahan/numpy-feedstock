@@ -15,6 +15,9 @@ source:
     - fortran_regex.patch     # [linux]
     # these tests only fail on linux32
     - disable_einsum_int16_test.patch   # [linux32]
+    # Power provides high precision longdoubles which causes some test errors
+    # see https://github.com/numpy/numpy/pull/8656
+    - 8656.patch  # [ppc64le]
 
 build:
   number: 4
