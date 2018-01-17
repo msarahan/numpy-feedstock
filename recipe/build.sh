@@ -10,5 +10,5 @@ fi
 cp $PREFIX/site.cfg site.cfg
 
 $PYTHON setup.py config
-$PYTHON setup.py build
+$PYTHON setup.py build -j ${CPU_COUNT}
 $PYTHON setup.py install --single-version-externally-managed --record=record.txt
