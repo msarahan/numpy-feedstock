@@ -34,7 +34,7 @@ requirements:
     - cython
     - python
     - mkl-devel  {{ mkl }}  # [blas_impl == 'mkl']
-    - openblas    # [blas_impl == 'openblas']
+    - openblas-devel    # [blas_impl == 'openblas']
     - setuptools
   run:
     - python
