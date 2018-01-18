@@ -16,6 +16,9 @@ source:
     - nuke_error_message.patch   # [win]
     # Seems to be an issue with case sensitivity and Windows filesystem permission errors.
     - windows_case_sensitivity.patch   # [win]
+    # Power provides high precision longdoubles which causes some test errors
+    # see https://github.com/numpy/numpy/pull/8656
+    - 8656.patch  # [ppc64le]
 
 build:
   number: 1

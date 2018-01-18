@@ -1,0 +1,145 @@
+From 60961dd49badde39f387b63d1b40514c87347f1c Mon Sep 17 00:00:00 2001
+From: Matthew Brett <matthew.brett@gmail.com>
+Date: Tue, 21 Feb 2017 21:11:50 +0000
+Subject: [PATCH 1/2] BUG: allow for precision > 20 in longdouble repr
+
+Precision of repr set to 22 when longdouble != double, but this isn't
+enough for double double (precision 33) or float128 (precision 34).  If
+repr precision is not high enough to show eps value, skip the test.
+
+Closes gh-7940.
+---
+ numpy/core/tests/test_longdouble.py | 34 +++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/numpy/core/tests/test_longdouble.py b/numpy/core/tests/test_longdouble.py
+index 1c561a48f50..13b78b93060 100644
+--- a/numpy/core/tests/test_longdouble.py
++++ b/numpy/core/tests/test_longdouble.py
+@@ -10,29 +10,33 @@
+ from numpy.compat import sixu
+ from test_print import in_foreign_locale
+ 
+-longdouble_longer_than_double = (np.finfo(np.longdouble).eps
+-                                 < np.finfo(np.double).eps)
++LD_INFO = np.finfo(np.longdouble)
++longdouble_longer_than_double = (LD_INFO.eps < np.finfo(np.double).eps)
+ 
+ 
+-_o = 1 + np.finfo(np.longdouble).eps
++_o = 1 + LD_INFO.eps
+ string_to_longdouble_inaccurate = (_o != np.longdouble(repr(_o)))
+ del _o
+ 
+ 
+ def test_scalar_extraction():
+     """Confirm that extracting a value doesn't convert to python float"""
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     a = np.array([o, o, o])
+     assert_equal(a[1], o)
+ 
+ 
+ # Conversions string -> long double
+ 
+-
++# 0.1 not exactly representable in base 2 floating point.
++repr_precision = len(repr(np.longdouble(0.1)))
++# +2 from macro block starting around line 842 in scalartypes.c.src.
++@dec.skipif(LD_INFO.precision + 2 >= repr_precision,
++            "repr precision not enough to show eps")
+ def test_repr_roundtrip():
+-    o = 1 + np.finfo(np.longdouble).eps
+-    assert_equal(np.longdouble(repr(o)), o,
+-                 "repr was %s" % repr(o))
++    # We will only see eps in repr if within printing precision.
++    o = 1 + LD_INFO.eps
++    assert_equal(np.longdouble(repr(o)), o, "repr was %s" % repr(o))
+ 
+ 
+ def test_unicode():
+@@ -56,7 +60,7 @@ def test_fromstring_foreign():
+ 
+ @dec.knownfailureif(string_to_longdouble_inaccurate, "Need strtold_l")
+ def test_repr_roundtrip_bytes():
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     assert_equal(np.longdouble(repr(o).encode("ascii")), o)
+ 
+ 
+@@ -73,7 +77,7 @@ def test_bogus_string():
+ 
+ @dec.knownfailureif(string_to_longdouble_inaccurate, "Need strtold_l")
+ def test_fromstring():
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     s = (" " + repr(o))*5
+     a = np.array([o]*5)
+     assert_equal(np.fromstring(s, sep=" ", dtype=np.longdouble), a,
+@@ -109,7 +113,7 @@ def test_fromstring_missing():
+ 
+ class FileBased(TestCase):
+ 
+-    ldbl = 1 + np.finfo(np.longdouble).eps
++    ldbl = 1 + LD_INFO.eps
+     tgt = np.array([ldbl]*5)
+     out = ''.join([repr(t) + '\n' for t in tgt])
+ 
+@@ -176,28 +180,28 @@ def test_fromstring_foreign_value():
+ 
+ 
+ def test_repr_exact():
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     assert_(repr(o) != '1')
+ 
+ 
+ @dec.knownfailureif(longdouble_longer_than_double, "BUG #2376")
+ @dec.knownfailureif(string_to_longdouble_inaccurate, "Need strtold_l")
+ def test_format():
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     assert_("{0:.40g}".format(o) != '1')
+ 
+ 
+ @dec.knownfailureif(longdouble_longer_than_double, "BUG #2376")
+ @dec.knownfailureif(string_to_longdouble_inaccurate, "Need strtold_l")
+ def test_percent():
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     assert_("%.40g" % o != '1')
+ 
+ 
+ @dec.knownfailureif(longdouble_longer_than_double, "array repr problem")
+ @dec.knownfailureif(string_to_longdouble_inaccurate, "Need strtold_l")
+ def test_array_repr():
+-    o = 1 + np.finfo(np.longdouble).eps
++    o = 1 + LD_INFO.eps
+     a = np.array([o])
+     b = np.array([1], dtype=np.longdouble)
+     if not np.all(a != b):
+
+From cd2446cbf34ffd48f19255b9c9751c2f18c52c6b Mon Sep 17 00:00:00 2001
+From: Matthew Brett <matthew.brett@gmail.com>
+Date: Wed, 22 Feb 2017 10:11:29 -0800
+Subject: [PATCH 2/2] BUG: re-enable test with duplicate name
+
+test_longdouble had two tests called test_fromstring_foreign, so the
+second was overwriting the first.  Rename the first so test gets run.
+---
+ numpy/core/tests/test_longdouble.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/numpy/core/tests/test_longdouble.py b/numpy/core/tests/test_longdouble.py
+index 13b78b93060..0c363a8c3cd 100644
+--- a/numpy/core/tests/test_longdouble.py
++++ b/numpy/core/tests/test_longdouble.py
+@@ -52,7 +52,7 @@ def test_bytes():
+ 
+ 
+ @in_foreign_locale
+-def test_fromstring_foreign():
++def test_fromstring_foreign_repr():
+     f = 1.234
+     a = np.fromstring(repr(f), dtype=float, sep=" ")
+     assert_equal(a[0], f)
