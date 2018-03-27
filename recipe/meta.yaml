@@ -10,21 +10,32 @@ source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.zip
   sha256: {{ sha256 }}
   patches:
-    - mklfft.patch
-    - osx-dist.patch
+    # patches for MKL based enhancements
+    - intel_mkl-version.patch              # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - intel_use_mkl_fft.patch              # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - intel_distribution.patch             # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - intel_umath_optimizations.patch      # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - intel_mkl_mem_all.patch              # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - intel_init_mkl.patch                 # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - intel_mkl_random.patch               # [blas_impl == 'mkl' and (not win or vc>=14)]
+    # patch up MKL patches
+    - 0001-Remove-ICC-specific-flags.patch # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - 0002-Remove-np.invsqrt.patch         # [blas_impl == 'mkl' and (not win or vc>=14)]
+    - 0003-Rewrite-inlining.patch          # [blas_impl == 'mkl' and (not win or vc>=14)]
+
+    # patch sequence switched as it is easier to apply smaller patches than
+    # larger ones to the changes above!
+    - osx-dist.patch # [osx]
     # customize gfortran executable that gets looked for to use our GFORTRAN env var
     - gfortran_alias.patch
-    # Windows and its stupid long integer stuff breaks this test.  Just kill it.
-    - nuke_error_message.patch   # [win]
     # Seems to be an issue with case sensitivity and Windows filesystem permission errors.
     - windows_case_sensitivity.patch   # [win]
     # precision issue with longdouble on ppc64le
     - 0001-skip-test_loss_of_precision_longcomplex-test.patch  # [ppc64le]
-    - 0005-intel-init-mkl.patch                 # [blas_impl == 'mkl' and (not win or vc>=14)]
     - disable_memmap_path_test.patch            # [win64 and py3k]
 
 build:
-  number: 3
+  number: 4
   skip: True  # [blas_impl == 'openblas' and win]
   # conda 4.4+ can use this
   requires_features:
@@ -37,6 +48,8 @@ requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('fortran') }}
+    # HACK: this should be done in the compiler activation scripts.  Until that's done, do it here.
+    - libgcc-ng  # [linux]
   host:
     - cython
     - python
@@ -46,6 +59,8 @@ requirements:
   run:
     - python
     # openblas or mkl runtime included with run_exports
+    - mkl_fft # [blas_impl == 'mkl']
+    - mkl_random # [blas_impl == 'mkl' and (not win or vc>=14)]
 
 test:
   requires:

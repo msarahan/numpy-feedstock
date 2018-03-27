@@ -11,6 +11,8 @@ echo/ >> numpy/__init__.py
 :: site.cfg comes from blas devel package (e.g. mkl-devel)
 COPY %PREFIX%\site.cfg site.cfg
 
+python setup.py config
+python setup.py build -j %CPU_COUNT%
 python setup.py install --single-version-externally-managed --record=record.txt
 if errorlevel 1 exit 1
 
